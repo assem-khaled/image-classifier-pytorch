@@ -1,0 +1,82 @@
+# Imports here
+from torchvision import transforms
+import torch
+
+from PIL import Image
+import json
+import argparse
+
+def get_model(model_path):
+    my_model = torch.load(model_path)
+    my_model.to(device)
+    return my_model
+
+def process_image(image):
+
+    pil_image = Image.open(image)
+    
+    transform = transforms.Compose([transforms.Resize(224),
+                                   transforms.CenterCrop(224),
+                                   transforms.ToTensor(),
+                                   transforms.Normalize([0.485, 0.456, 0.406], 
+                                                        [0.229, 0.224, 0.225])])
+    # transform image to tensor
+    pil_transform = transform(pil_image)
+    
+    return pil_transform
+
+def predict(image_path, model, topk=5):
+    # processing image
+    test_image = process_image(image_path)
+    test_image = test_image.to(device)
+    test_image = test_image.unsqueeze(dim = 0)
+    
+    model.eval()
+    with torch.no_grad():
+        test_prediction = model(test_image)
+        test_prediction = torch.exp(test_prediction)
+        porbs, classes = test_prediction.topk(topk)
+        
+    model.train()
+
+    class_list = []
+    
+    for c in classes[0]:
+        for k,v in model.class_to_idx.items():
+            if c == v:
+                class_list.append(k)
+    
+    return [round(p,5) for p in porbs[0].tolist()], class_list
+    
+    
+def main():
+    #initialize the parser
+    parser = argparse.ArgumentParser(description='to get the prediction type: python predict.py <image_path> <model_path> --top_k <k> --category_names <label_path> --gpu')
+
+    #Add the positional parameters
+    parser.add_argument('image', help='Path to the image', type = str)
+    parser.add_argument('model', help='Path to model.pth', type=str)
+    #Add the optional parameters
+    parser.add_argument('--top_k', help='Top k predictions', type=int, default=5)
+    parser.add_argument('--category_names', help='path to labels map', type=str, default='cat_to_name.json')
+    parser.add_argument('--gpu', help='Enable gpu', default=False, action='store_true')
+
+    #Parse the argument
+    args = parser.parse_args()
+    # setting the device
+    global device
+    device = torch.device('cuda' if args.gpu else 'cpu')
+    #get the model from the model path
+    model = get_model(args.model)
+    # get the labels
+    with open(args.category_names, 'r') as f:
+        cat_to_name = json.load(f)
+    #predict the image
+    prob, classes = predict(args.image, model, args.top_k)
+
+    print('prediction: ', cat_to_name[classes[0]])
+    print('top {} probabilities: {}'.format(args.top_k, prob))
+    print('top {} classes: {}'.format(args.top_k, classes))
+
+if __name__ == '__main__':
+    main()
