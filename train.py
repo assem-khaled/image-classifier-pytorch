@@ -38,24 +38,31 @@ def transfrom(data_dir):
     valloader = torch.utils.data.DataLoader(val_data, batch_size = 64)
     testloader = torch.utils.data.DataLoader(test_data, batch_size = 64)
     
-    print('Dataset loaded')
     return trainloader, valloader, testloader, train_data.class_to_idx
 
-def build_model(arch, hidden_units, learning_rate):
+def build_model(arch, hidden_units, learning_rate, class_idx):
     # loading a pre-trained network
-    if arch == 'vgg11':
-        model = models.vgg11(pretrained = True)
-    elif arch == 'vgg13':
+    if arch.lower() == 'vgg19':
+        model = models.vgg19(pretrained = True)
+        model.name = 'vgg19'    
+    elif arch.lower() == 'vgg16':
+        model = models.vgg16(pretrained = True)
+        model.name = 'vgg16'        
+    elif arch.lower() == 'vgg13':
         model = models.vgg13(pretrained = True)
+        model.name = 'vgg13'
+    else:
+        model = models.vgg11(pretrained = True)
+        model.name = 'vgg11'
     # Freeze parameters so we don't backprop through them
     for param in model.parameters():
         param.requires_grad = False
 
     # Replacing the pretrained classifier
     model.classifier = nn.Sequential(OrderedDict([('fc1', nn.Linear(25088, hidden_units)),
-                                   ('relu1', nn.ReLU()),
-                                   ('dropout1', nn.Dropout(0.5)),
-                                   ('fc2', nn.Linear(hidden_units, 102)),
+                                   ('relu', nn.ReLU()),
+                                   ('dropout', nn.Dropout(0.5)),
+                                   ('fc2', nn.Linear(hidden_units, len(class_idx))),
                                    ('output', nn.LogSoftmax(dim=1)) ]))
     
 
@@ -71,8 +78,9 @@ def build_model(arch, hidden_units, learning_rate):
 def train(data_dir, arch, hidden_units, learning_rate, epochs, test=False):
     # applying transforms and loading the dataset
     trainloader, valloader, testloader, class_idx = transfrom(data_dir)
+    print('Dataset loaded')
     # building the model
-    model, criterion, optimizer = build_model(arch, hidden_units, learning_rate)
+    model, criterion, optimizer = build_model(arch, hidden_units, learning_rate, class_idx)
     # training the model
     print_every = 50
     print('start training for {} epochs'.format(epochs))
@@ -155,24 +163,33 @@ def train(data_dir, arch, hidden_units, learning_rate, epochs, test=False):
     # save the mapping of classes to indices
     model.class_to_idx = class_idx     
     return model
-    
-def save_model(model, save_dir):
-    # saving model
-    torch.save(model, save_dir)
-    print('Model saved')
+
+def save_model(model, model_save_dir, checkpoint=False):
+    if checkpoint == True: # saving checkpoint
+        checkpoint = {'classifier': model.classifier,
+                    'state_dict': model.state_dict(),
+                    'mapping': model.class_to_idx,
+                    'name': model.name}
+
+        torch.save(checkpoint, model_save_dir)
+        print('Checkpoint saved')
+    else: # saving model
+        torch.save(model, model_save_dir)
+        print('Model saved')
 
 
     
     
 def main():
     #initialize the parser
-    parser = argparse.ArgumentParser(description='to train the model type: python train.py <data_directory> --save_dir <save_directory> --arch <architecture vgg11 or vgg13> --learning_rate <float_num> --hidden_units <int_num> --epochs <int_num> --gpu --test')
+    parser = argparse.ArgumentParser(description='to train the model type: python train.py <data_directory> --model_save_dir <model_save_directory> --checkpoint <to save only a checkpoint> --arch <architecture vgg11, vgg13, vgg16 or vgg19> --learning_rate <float_num> --hidden_units <int_num> --epochs <int_num> --gpu --test')
 
     #Add the positional parameters
     parser.add_argument('data_directory', help='Path to the dataset', type=str)
     #Add the optional parameters
-    parser.add_argument('--save_dir', help='Path to save the model', type=str, default='saved_model.pth')
-    parser.add_argument('--arch', help='Choose architecture vgg11 or vgg13', type=str, default='vgg11')
+    parser.add_argument('--model_save_dir', help='Path to save the model', type=str, default='saved_model.pth')
+    parser.add_argument('--checkpoint', help='save model checkpoint', default=False, action='store_true')
+    parser.add_argument('--arch', help='Choose vgg architecture', type=str, default='vgg11')
     parser.add_argument('--learning_rate', help='Choose learning_rate', type=float, default=0.001)
     parser.add_argument('--hidden_units', help='Number of hidden units', type=int, default=512)
     parser.add_argument('--epochs', help='Number of epochs', type=int, default=20)
@@ -183,12 +200,12 @@ def main():
     args = parser.parse_args()
     # setting the device
     global device
-    device = torch.device('cuda' if args.gpu else 'cpu')
+    device = torch.device('cuda' if args.gpu and torch.cuda.is_available() else 'cpu')
     print('using:',device)
     # training the model
     model = train(args.data_directory, args.arch, args.hidden_units, args.learning_rate, args.epochs, args.test)
     # save model to directory
-    save_model(model, args.save_dir)
+    save_model(model, args.model_save_dir, args.checkpoint)
 
 
 if __name__ == '__main__':
