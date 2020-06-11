@@ -78,8 +78,8 @@ def main():
     #Add the positional parameters
     parser.add_argument('image', help='Path to the image', type = str)
     parser.add_argument('model', help='Path to load model', type=str)
-    parser.add_argument('--checkpoint', help='load model checkpoint', default=False, action='store_true')
     #Add the optional parameters
+	parser.add_argument('--checkpoint', help='load model checkpoint', default=False, action='store_true')
     parser.add_argument('--top_k', help='Top k predictions', type=int, default=5)
     parser.add_argument('--category_names', help='path to labels map', type=str, default='cat_to_name.json')
     parser.add_argument('--gpu', help='Enable gpu', default=False, action='store_true')
