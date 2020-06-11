@@ -11,12 +11,12 @@ The image classifier to recognize different species of flowers. [Dataset](http:/
 contains 102 flower categories.
 
 ## Command line applications
-in the command line applications there is an option to select either VGG11 or VGG13 models.\
+in the command line applications there is an option to select a [VGG](https://pytorch.org/hub/pytorch_vision_vgg) architecture network.\
 To use train.py to train a model; use the following positional and optional parameters:
 - 'data_directory': Provide data directory
 - '--model_save_dir': option to provide save directory for the model
-- '--checkpoint': option to save a only checkpoint
-- '--arch': option to use vgg11 or vgg13 (default: vgg11)
+- '--checkpoint': option to save a only checkpoint (default: False)
+- '--arch': option to use vgg11, vgg13, vgg16 or vgg19 architecture (default: vgg11)
 - '--learning_rate': option to provide learning rate (default: 0.001)
 - '--hidden_units': option to provide number of hidden units (default: 512)
 - '--epochs': option to provide number of epochs to train (default: 20)
@@ -26,7 +26,7 @@ To use train.py to train a model; use the following positional and optional para
 To use predict.py to make prediction; use the following positional and optional parameters:
 - 'image': Provide image directory
 - 'model': Provide model directory
-- '--checkpoint': option to load a checkpoint
+- '--checkpoint': option to load a checkpoint (default: False)
 - '--top_k': option to get top k number predictions (default: 5)
 - '--category_names': option to provide another directory for the mapping category names (default: [cat_to_name.json](cat_to_name.json))
 - '--gpu': option to use gpu
