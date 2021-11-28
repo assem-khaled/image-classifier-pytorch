@@ -10,8 +10,8 @@ application which could be used from command line using "train.py" and "predict.
 The image classifier to recognize different species of flowers. [Dataset](http://www.robots.ox.ac.uk/~vgg/data/flowers/102/index.html) 
 contains 102 flower categories.
 
-## Command line applications
-in the command line applications there is an option to select a [VGG](https://pytorch.org/hub/pytorch_vision_vgg) architecture network.\
+## Command line application
+in the command line application there is an option to select a [VGG](https://pytorch.org/hub/pytorch_vision_vgg) architecture network.\
 To use train.py to train a model; use the following positional and optional parameters:
 - 'data_directory': Provide data directory
 - '--model_save_dir': option to provide save directory for the model
