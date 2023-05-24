@@ -1,6 +1,6 @@
 # Image Classifier project for Udacity Nanodegree program
 
-Project code for Udacity's Intro to Machine learning with pytorch Nanodegree program. In this project, the goal is to develop code for 
+This project is a part of Udacity's Intro to Machine learning with pytorch Nanodegree program. In this project, the goal is to develop code for 
 an image classifier built with PyTorch, then convert it into a command line application.
 
 This project uses PyTorch and the torchvision package; the Jupyter Notebook walks through the implementation of the 
